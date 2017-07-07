@@ -3,8 +3,12 @@
 import Vue from 'vue'
 import app from './app'
 import router from './router'
+import VueResource from 'vue-resource'
+import './mock/mockServer'
+import './mock/data.json'  // 引入加载模块
 import './common/stylus/fonts.styl'
 
+Vue.use(VueResource)
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */

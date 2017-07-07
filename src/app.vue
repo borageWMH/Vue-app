@@ -1,6 +1,6 @@
 <template>
   <div>
-    <ele-header></ele-header>
+    <ele-header :seller="seller"></ele-header>
     <div class="tab">
       <div class="tab-item">
         <router-link to="/goods">商品</router-link>
@@ -18,10 +18,39 @@
 
 <script>
   import header from './components/header/header.vue'
-
+  import axios from 'axios'
   export default {
+    data(){
+        return {
+            seller : {}
+        }
+    },
     components: {
       'ele-header': header
+    },
+    methods:{
+
+    },
+    created() {
+      // 使用vue-resource发送ajax请求express提供的接口
+      const ok = 0
+      this.$http.get('/api/seller')
+        .then(response =>{
+            const result = response.body
+            if(result.code === ok){
+                this.seller = result.data
+                console.log('vue-resource',this.seller);
+            }
+        })
+      // 使用axios发送ajax请求mockjs提供的接口
+      axios.get('/api2/seller')
+        .then(response =>{
+          const result = response.data
+          if(result.code === ok){
+            this.seller = result.data
+            console.log('axios',this.seller);
+          }
+        })
     }
   }
 </script>

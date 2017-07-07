@@ -21,6 +21,36 @@ var autoOpenBrowser = !!config.dev.autoOpenBrowser
 var proxyTable = config.dev.proxyTable
 
 var app = express()
+/*mock data start*/
+var  data= require('../src/mock/data.json')
+var seller = data.seller
+var goods = data.goods
+var ratings = data.ratings
+// 得到路由器
+var router = express.Router()
+// 注册路由
+router.get('/seller',function (req,res) {
+  res.json({
+    code :0,
+    data: seller
+  })
+})
+router.get('/goods',function (req,res) {
+  res.json({
+    code :0,
+    data: goods
+  })
+})
+router.get('/ratings',function (req,res) {
+  res.json({
+    code :0,
+    data: ratings
+  })
+})
+// 启用路由
+app.use('/api',router)
+
+/*mock data end */
 var compiler = webpack(webpackConfig)
 
 var devMiddleware = require('webpack-dev-middleware')(compiler, {
