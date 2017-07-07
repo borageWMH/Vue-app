@@ -3,8 +3,10 @@
     <div class="goods">
       <div class="menu-wrapper" ref="menuWrapper">
         <ul>
-          <li class="menu-item" v-for="good in goods">
-             <span class="text border-1px">
+          <!--current-->
+          <li class="menu-item" v-for="(good, index) in goods"
+              :class="{current: index===currentIndex}" @click="clickMenuItem(index, $event)">
+            <span class="text border-1px">
               <span class="icon" v-if="good.type>=0" :class="classMap[good.type]"></span>{{good.name}}
             </span>
           </li>
@@ -40,38 +42,92 @@
         </ul>
       </div>
     </div>
-    <div class="foods"></div>
+    <div class="food"></div>
   </div>
 </template>
 
 <script>
-  import Vue from 'vue'
   import axios from 'axios'
   import BScroll from 'better-scroll'
-  const ok = 0
+  import Vue from 'vue'
+
+  const OK = 0
   export default {
-    data(){
-        return{
-            goods :[]
+    data () {
+      return {
+        goods: [],
+        tops: [],
+        scrollY: 0
+      }
+    },
+
+    created () {
+      this.classMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee']
+      axios.get('/api2/goods')
+        .then(response => {
+          const result = response.data
+          if (result.code === OK) {
+            this.goods = result.data
+            //在下次 DOM 更新循环结束之后执行延迟回调。在修改数据之后立即使用这个方法，获取更新后的 DOM。
+            Vue.nextTick(() => {
+              //初始化滚动条
+              this._initScroll()
+              // 读取右侧所有分类的top值
+              this._initTops()
+            })
+
+          }
+        })
+    },
+
+    methods: {
+      _initScroll () {
+        // 创建分类列表的Scroll对象
+        new BScroll(this.$refs.menuWrapper, {
+          click: true
+        })
+        // 创建food列表的Scroll对象
+        this.foodsScroll = new BScroll(this.$refs.foodsWrapper, {
+          probeType: 3,
+          click: true
+        })
+        // 绑定scroll监听
+        this.foodsScroll.on('scroll', (pos) => {
+          //console.log(pos.y)
+          this.scrollY = Math.abs(pos.y)
+        })
+      },
+
+      _initTops () {
+        var tops = this.tops
+        var top = 0
+        tops.push(top)
+        var lis = this.$refs.foodsWrapper.getElementsByClassName('food-list-hook')
+        ;[].slice.call(lis).forEach(li => {
+          top += li.clientHeight
+          tops.push(top)
+        })
+        console.log(tops)
+      },
+
+      clickMenuItem (index, event) {
+        // 过滤掉原生DOM事件
+        if(!event._constructed) { // _constructed是better-scroll库添加的
+          return
         }
+        console.log(index, event)
+        // 将右铡的列表滚动到对应的位置
+        var li = this.$refs.foodsWrapper.getElementsByClassName('food-list-hook')[index]
+        this.foodsScroll.scrollToElement(li, 300)
+      }
     },
-    created(){
-      this.classMap = ["decrease", "discount", "guarantee", "invoice", "special"]
-        axios.get('/api2/goods')
-          .then(response =>{
-              const result = response.data
-              if(result.code === ok){
-                  this.goods = result.data
-                // 初始化滚动条
-                this._initScroll()
-              }
-          })
-    },
-    methods:{
-      _initScroll(){
-        Vue.nextTick(() =>{
-            new BScroll(this.$refs.menuWrapper,{})
-            new BScroll(this.$refs.foodsWrapper,{})
+
+    computed: {
+      currentIndex () {
+        const {tops, scrollY} = this
+        // scrollY大于或等于当前的top, 且小于下一个top
+        return tops.findIndex((top,index) => {
+          return scrollY>=top && scrollY<tops[index+1]
         })
       }
     }
