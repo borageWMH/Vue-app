@@ -33,7 +33,7 @@
                     <span class="old" v-show="food.oldPrice">￥{{food.oldPrice}}</span>
                   </div>
                   <div class="cartcontrol-wrapper">
-                    cartcontrol组件
+                    <cartcontrol :food="food" :update-food-count="updateFoodCount"></cartcontrol>
                   </div>
                 </div>
               </li>
@@ -50,6 +50,7 @@
   import axios from 'axios'
   import BScroll from 'better-scroll'
   import Vue from 'vue'
+  import cartcontrol from '../cartcontrol/cartcontrol.vue'
 
   const OK = 0
   export default {
@@ -59,6 +60,9 @@
         tops: [],
         scrollY: 0
       }
+    },
+    components :{
+      cartcontrol
     },
 
     created () {
@@ -119,13 +123,36 @@
         // 将右铡的列表滚动到对应的位置
         var li = this.$refs.foodsWrapper.getElementsByClassName('food-list-hook')[index]
         this.foodsScroll.scrollToElement(li, 300)
+      },
+
+      updateFoodCount (food, isAdd, event) {
+        if(!event._constructed) {
+          return
+        }
+
+        if(isAdd) { // 增加
+          if(!food.count) { // 第一次
+            console.log('updateFoodCount() 第一次')
+            // 新增count属性
+            // food.count = 1  // 没有监视-->没有数据绑定, 界面不会更新
+            Vue.set(food, 'count', 1)
+          } else {
+            food.count++
+          }
+        } else { // 减少
+          if(food.count) {
+            food.count--
+          }
+        }
       }
     },
+
 
     computed: {
       currentIndex () {
         const {tops, scrollY} = this
         // scrollY大于或等于当前的top, 且小于下一个top
+        // 返回满足回调函数中指定的测试条件的第一个数组元素的索引值。
         return tops.findIndex((top,index) => {
           return scrollY>=top && scrollY<tops[index+1]
         })
