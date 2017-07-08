@@ -14,10 +14,10 @@
       </div>
       <div class="foods-wrapper" ref="foodsWrapper">
         <ul>
-          <li class="food-list food-list-hook" v-for="good in goods">
+          <li class="food-list food-list-hook" v-for="good in goods" >
             <h1 class="title">{{good.name}}</h1>
             <ul>
-              <li class="food-item border-1px" v-for="food in good.foods">
+              <li class="food-item border-1px" v-for="food in good.foods" @click="clickFood(food,$event)">
                 <div class="icon">
                   <img width="57" height="57" :src="food.icon">
                 </div>
@@ -41,8 +41,15 @@
           </li>
         </ul>
       </div>
+      <shopcart :food-list="foodList"
+                :delivery-price="seller.deliveryPrice"
+                :min-price="seller.minPrice"
+                :clear-cart="clearCart"
+                :update-food-count="updateFoodCount">
+
+      </shopcart>
     </div>
-    <div class="food"></div>
+    <food :food="selectFood" :update-food-count="updateFoodCount" ref="food"></food>
   </div>
 </template>
 
@@ -51,18 +58,24 @@
   import BScroll from 'better-scroll'
   import Vue from 'vue'
   import cartcontrol from '../cartcontrol/cartcontrol.vue'
+  import shopcart from  '../shopcart/shopcart.vue'
+  import food from '../food/food.vue'
 
   const OK = 0
   export default {
+    props:['seller'],
     data () {
       return {
         goods: [],
         tops: [],
-        scrollY: 0
+        scrollY: 0,
+        selectFood :{}
       }
     },
     components :{
-      cartcontrol
+      cartcontrol,
+      shopcart,
+      food
     },
 
     created () {
@@ -144,6 +157,20 @@
             food.count--
           }
         }
+      },
+      clearCart(){
+          this.foodList.forEach(food =>{
+              food.count = 0
+          })
+      },
+      // 点击获取每一个食物
+      clickFood(food,event){
+        if(!event._constructed) {
+          return
+        }
+          this.selectFood = food
+          this.$refs.food.show()
+
       }
     },
 
@@ -156,6 +183,17 @@
         return tops.findIndex((top,index) => {
           return scrollY>=top && scrollY<tops[index+1]
         })
+      },
+      foodList(){   // 返回所有count 大于0 的food
+        const foods = []
+        this.goods.forEach(good =>{
+            good.foods.forEach(food =>{
+                if(food.count){
+                  foods.push(food)
+                }
+            })
+        })
+        return foods
       }
     }
   }
